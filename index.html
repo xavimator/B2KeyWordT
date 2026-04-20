@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>B2 Key Word Transformation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: #0f0e17;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #e8e3d8;
+    padding-bottom: 80px;
+  }
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,14,23,0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(212,175,55,0.2);
+    padding: 14px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sub { font-size: 10px; letter-spacing: 4px; color: #d4af37; text-transform: uppercase; font-family: sans-serif; font-weight: 600; }
+  .title { font-size: 21px; font-weight: bold; }
+  .hright { text-align: right; font-family: sans-serif; }
+  .score-label { font-size: 10px; letter-spacing: 2px; color: #d4af37; text-transform: uppercase; }
+  .score-val { font-size: 20px; font-weight: 700; }
+  .score-val .gold { color: #d4af37; }
+  .score-val .dim  { color: #555; font-size: 14px; }
+  .score-pct { font-size: 11px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 20px; }
+  .intro {
+    background: rgba(212,175,55,0.07);
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 8px; padding: 14px 18px;
+    font-size: 13px; line-height: 1.7; color: #b8b0a0;
+    font-family: sans-serif; margin-top: 28px;
+  }
+  .intro strong { color: #e8e3d8; }
+  .intro .lbl { color: #d4af37; }
+
+  /* Card */
+  .card {
+    margin-top: 24px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px; padding: 22px;
+    animation: fadeUp 0.35s ease both;
+    transition: border-color 0.3s;
+  }
+  .card.correct { border-color: rgba(111,207,151,0.4); }
+  .card.wrong   { border-color: rgba(235,87,87,0.4); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .ex-num { font-size: 10px; letter-spacing: 3px; color: #d4af37; font-family: sans-serif; font-weight: 600; text-transform: uppercase; }
+  .badge { font-size: 11px; font-family: sans-serif; font-weight: 700; letter-spacing: 1px; }
+  .badge.ok  { color: #6fcf97; }
+  .badge.bad { color: #eb5757; }
+
+  .original { font-size: 15px; line-height: 1.7; margin-bottom: 16px; color: #e8e3d8; }
+
+  .key-row { margin-bottom: 18px; }
+  .key-lbl  { font-size: 11px; font-family: sans-serif; color: #888; letter-spacing: 1px; text-transform: uppercase; }
+  .key-word {
+    display: inline-block;
+    background: rgba(212,175,55,0.15);
+    border: 1px solid rgba(212,175,55,0.5);
+    color: #d4af37; font-family: sans-serif; font-weight: 700;
+    font-size: 13px; letter-spacing: 2px;
+    padding: 3px 10px; border-radius: 4px; margin-left: 6px;
+  }
+
+  /* Second sentence with inline gap */
+  .second-sentence {
+    font-size: 15px; line-height: 2.2; color: #e8e3d8;
+    margin-bottom: 10px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  }
+
+  .gap-wrap {
+    display: inline-flex; align-items: center;
+    background: rgba(255,255,255,0.06);
+    border-bottom: 2px solid rgba(212,175,55,0.7);
+    border-radius: 4px 4px 0 0;
+    padding: 2px 8px;
+    min-width: 160px;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .gap-wrap:focus-within {
+    background: rgba(212,175,55,0.08);
+    border-bottom-color: #d4af37;
+    box-shadow: 0 2px 0 0 rgba(212,175,55,0.3);
+  }
+  .gap-wrap.correct-inp { background: rgba(111,207,151,0.08); border-bottom-color: #6fcf97; }
+  .gap-wrap.wrong-inp   { background: rgba(235,87,87,0.07);   border-bottom-color: #eb5757; }
+
+  .gap-input {
+    background: transparent; border: none; outline: none;
+    color: #e8e3d8; font-size: 15px; font-family: Georgia, serif;
+    padding: 2px 0; min-width: 150px; width: 100%;
+  }
+  .gap-input::placeholder { color: #555; font-size: 13px; font-style: italic; }
+  .gap-input:disabled { cursor: not-allowed; }
+
+  .word-count { font-size: 11px; font-family: sans-serif; color: #666; margin-bottom: 12px; margin-top: 2px; }
+
+  /* Buttons */
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    border: none; border-radius: 6px; padding: 9px 20px;
+    font-family: sans-serif; font-weight: 700; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+    transition: all 0.2s;
+  }
+  button:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+  .btn-check  { background: #d4af37; color: #0f0e17; }
+  .btn-check:disabled { background: rgba(212,175,55,0.2); color: #666; cursor: not-allowed; }
+  .btn-show  { background: transparent; color: #d4af37; border: 1px solid rgba(212,175,55,0.4); }
+  .btn-retry { background: transparent; color: #888; border: 1px solid rgba(255,255,255,0.1); }
+
+  /* Feedback */
+  .answer-box {
+    background: rgba(212,175,55,0.08);
+    border: 1px solid rgba(212,175,55,0.2);
+    border-radius: 6px; padding: 11px 14px; margin-top: 13px;
+  }
+  .answer-box .albl { font-size: 10px; font-family: sans-serif; color: #d4af37; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+  .answer-box .aval { font-size: 15px; color: #e8e3d8; }
+  .hint-box {
+    margin-top: 10px; font-size: 12px; font-family: sans-serif; color: #888;
+    line-height: 1.6; padding: 8px 12px;
+    background: rgba(255,255,255,0.02); border-radius: 6px;
+    border-left: 2px solid rgba(212,175,55,0.3);
+  }
+
+  /* Loader */
+  .loader { text-align: center; padding: 40px 0; }
+  .spinner {
+    display: inline-block; width: 36px; height: 36px;
+    border: 2px solid rgba(212,175,55,0.15);
+    border-top-color: #d4af37;
+    border-radius: 50%; animation: spin 1s linear infinite;
+  }
+  .loader-txt { font-size: 10px; font-family: sans-serif; color: #555; margin-top: 10px; letter-spacing: 2px; }
+
+  @keyframes spin   { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #0f0e17; }
+  ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="sub">Cambridge B2</div>
+    <div class="title">Key Word Transformation</div>
+  </div>
+  <div class="hright">
+    <div class="score-label">Score</div>
+    <div class="score-val">
+      <span class="gold" id="sc">0</span>
+      <span class="dim"> / <span id="st">0</span></span>
+    </div>
+    <div class="score-pct" id="sp"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <strong class="lbl">Instructions:</strong> Complete the gap in the second sentence using the key word so it has the same meaning as the first. <strong>Do not change the key word.</strong> Use <strong>2–5 words</strong> including the key word.
+  </div>
+  <div id="cards"></div>
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div class="loader-txt">LOADING MORE</div>
+  </div>
+</div>
+
+<script>
+const ALL = [
+  // PASSIVE VOICE
+  {id:1,  sentence:"Someone stole my wallet on the bus.",
+          key:"WAS",       before:"My wallet",    after:"on the bus.",
+          gap:"was stolen",
+          hint:"Passive voice: was/were + past participle"},
+  {id:2,  sentence:"They are building a new hospital in the city centre.",
+          key:"BEING",     before:"A new hospital", after:"in the city centre.",
+          gap:"is being built",
+          hint:"Present continuous passive: is/are + being + past participle"},
+  {id:3,  sentence:"Nobody has ever climbed that mountain.",
+          key:"NEVER",     before:"That mountain",  after:"been climbed.",
+          gap:"has never",
+          hint:"Present perfect with never: has/have + never + been + past participle"},
+  {id:4,  sentence:"People believe that he is innocent.",
+          key:"BELIEVED",  before:"He",             after:"to be innocent.",
+          gap:"is believed",
+          hint:"Impersonal passive: subject + is believed to + infinitive"},
+  {id:5,  sentence:"The company will deliver the parcel tomorrow.",
+          key:"DELIVERED", before:"The parcel",     after:"tomorrow.",
+          gap:"will be delivered",
+          hint:"Future passive: will + be + past participle"},
+  {id:6,  sentence:"The police are investigating the robbery.",
+          key:"BEING",     before:"The robbery",    after:"by the police.",
+          gap:"is being investigated",
+          hint:"Present continuous passive: is/are + being + past participle"},
+
+  // REPORTED SPEECH
+  {id:7,  sentence:"'I will call you tomorrow,' he said.",
+          key:"PROMISED",  before:"He",             after:"me the next day.",
+          gap:"promised to call",
+          hint:"Reported speech: promised to + infinitive"},
+  {id:8,  sentence:"'Don't touch that!' she told the children.",
+          key:"WARNED",    before:"She",            after:"not to touch that.",
+          gap:"warned the children",
+          hint:"Reported warning: warned + object + not to + infinitive"},
+  {id:9,  sentence:"'Why don't you take a break?' my boss said.",
+          key:"SUGGESTED", before:"My boss",        after:"a break.",
+          gap:"suggested taking",
+          hint:"Reported suggestion: suggested + gerund"},
+  {id:10, sentence:"'I didn't break the window,' Tom said.",
+          key:"DENIED",    before:"Tom",            after:"the window.",
+          gap:"denied breaking",
+          hint:"Reported denial: denied + gerund"},
+  {id:11, sentence:"'I'm sorry I was late,' Anna said.",
+          key:"APOLOGISED",before:"Anna",           after:"late.",
+          gap:"apologised for being",
+          hint:"Reported apology: apologised for + gerund"},
+  {id:12, sentence:"'You should see a doctor,' she said to me.",
+          key:"ADVISED",   before:"She",            after:"a doctor.",
+          gap:"advised me to see",
+          hint:"Reported advice: advised + object + to + infinitive"},
+
+  // CONDITIONALS
+  {id:13, sentence:"She doesn't study, so she won't pass the exam.",
+          key:"IF",        before:"",               after:", she would pass the exam.",
+          gap:"If she studied",
+          hint:"Second conditional: If + past simple, would + infinitive"},
+  {id:14, sentence:"I didn't bring my umbrella, so I got wet.",
+          key:"BROUGHT",   before:"If I",           after:"my umbrella, I wouldn't have got wet.",
+          gap:"had brought",
+          hint:"Third conditional: If + past perfect, would have + past participle"},
+  {id:15, sentence:"You should leave now or you'll miss the train.",
+          key:"UNLESS",    before:"You'll miss the train", after:"now.",
+          gap:"unless you leave",
+          hint:"Unless = if not"},
+  {id:16, sentence:"Hurry up or we'll be late.",
+          key:"WE",        before:"If",             after:"don't hurry up, we'll be late.",
+          gap:"we",
+          hint:"First conditional with negative: If + subject + don't..."},
+  {id:17, sentence:"He works hard, and that's why he succeeds.",
+          key:"WEREN'T",   before:"If it",          after:"his hard work, he wouldn't succeed.",
+          gap:"weren't for",
+          hint:"If it weren't for + noun phrase = without"},
+  {id:18, sentence:"Study hard or you won't get into university.",
+          key:"UNLESS",    before:"",               after:"you study hard, you won't get into university.",
+          gap:"Unless",
+          hint:"Unless = if not (introduces the negative condition)"},
+
+  // MODALS
+  {id:19, sentence:"It's possible that she missed the train.",
+          key:"MIGHT",     before:"She",            after:"the train.",
+          gap:"might have missed",
+          hint:"Past possibility: might + have + past participle"},
+  {id:20, sentence:"I'm sure he didn't steal it — he's honest.",
+          key:"HAVE",      before:"He can't",       after:"it — he's honest.",
+          gap:"have stolen",
+          hint:"Logical impossibility: can't + have + past participle"},
+  {id:21, sentence:"It was wrong of you to say that.",
+          key:"SHOULDN'T", before:"You",            after:"that.",
+          gap:"shouldn't have said",
+          hint:"Past criticism: shouldn't + have + past participle"},
+  {id:22, sentence:"Perhaps they left early because of the traffic.",
+          key:"MAY",       before:"They",           after:"early because of the traffic.",
+          gap:"may have left",
+          hint:"Past speculation: may + have + past participle"},
+  {id:23, sentence:"It wasn't necessary for you to wait for me.",
+          key:"NEED",      before:"You",            after:"for me.",
+          gap:"needn't have waited",
+          hint:"Unnecessary past action: needn't + have + past participle"},
+  {id:24, sentence:"I'm almost certain she took the wrong train.",
+          key:"MUST",      before:"She",            after:"the wrong train.",
+          gap:"must have taken",
+          hint:"Logical deduction: must + have + past participle"},
+
+  // COMPARATIVES & SUPERLATIVES
+  {id:25, sentence:"No other student in the class is as tall as Peter.",
+          key:"TALLEST",   before:"Peter is",       after:"in the class.",
+          gap:"the tallest student",
+          hint:"Superlative from 'no other... as... as'"},
+  {id:26, sentence:"As you get older, you become wiser.",
+          key:"THE",       before:"The older you get,", after:"you become.",
+          gap:"the wiser",
+          hint:"Double comparative: the + comparative, the + comparative"},
+  {id:27, sentence:"The red car is cheaper than the blue one.",
+          key:"EXPENSIVE", before:"The blue car is", after:"the red one.",
+          gap:"more expensive than",
+          hint:"Reverse the comparison using more... than"},
+  {id:28, sentence:"I've never eaten such delicious food.",
+          key:"MOST",      before:"It is",          after:"I've ever eaten.",
+          gap:"the most delicious food",
+          hint:"Superlative + ever: the most... I've ever..."},
+  {id:29, sentence:"She runs faster than any other athlete.",
+          key:"FASTEST",   before:"She is",         after:"athlete.",
+          gap:"the fastest",
+          hint:"The fastest = faster than any other"},
+  {id:30, sentence:"He is not as reliable as his brother.",
+          key:"LESS",      before:"He is",          after:"his brother.",
+          gap:"less reliable than",
+          hint:"Not as... as = less... than"},
+
+  // GERUND & INFINITIVE
+  {id:31, sentence:"He regrets not studying harder at school.",
+          key:"WISHES",    before:"He",             after:"harder at school.",
+          gap:"wishes he had studied",
+          hint:"Wish + past perfect for regrets about the past"},
+  {id:32, sentence:"It took me two hours to finish the report.",
+          key:"SPENT",     before:"I",              after:"the report.",
+          gap:"spent two hours finishing",
+          hint:"Spend + time + gerund"},
+  {id:33, sentence:"They didn't allow us to enter the building.",
+          key:"LET",       before:"They didn't",    after:"the building.",
+          gap:"let us enter",
+          hint:"Let + object + bare infinitive (no 'to')"},
+  {id:34, sentence:"She is too tired to go out tonight.",
+          key:"ENOUGH",    before:"She isn't",      after:"out tonight.",
+          gap:"energetic enough to go",
+          hint:"Not + adjective + enough + to infinitive"},
+  {id:35, sentence:"He finds it difficult to wake up early.",
+          key:"DIFFICULTY",before:"He",             after:"up early.",
+          gap:"has difficulty waking",
+          hint:"Have difficulty (in) + gerund"},
+  {id:36, sentence:"She finally managed to solve the problem.",
+          key:"SUCCEEDED", before:"She",            after:"the problem.",
+          gap:"succeeded in solving",
+          hint:"Succeed in + gerund"},
+
+  // PHRASAL VERBS
+  {id:37, sentence:"The meeting was cancelled because of the storm.",
+          key:"CALLED",    before:"The meeting",    after:"because of the storm.",
+          gap:"was called off",
+          hint:"Call off = cancel"},
+  {id:38, sentence:"She resembles her mother very much.",
+          key:"TAKES",     before:"She",            after:"her mother very much.",
+          gap:"takes after",
+          hint:"Take after = resemble a family member"},
+  {id:39, sentence:"You should tolerate other people's opinions.",
+          key:"PUT",       before:"You should",     after:"other people's opinions.",
+          gap:"put up with",
+          hint:"Put up with = tolerate"},
+  {id:40, sentence:"They postponed the match until next week.",
+          key:"PUT",       before:"They",           after:"until next week.",
+          gap:"put off the match",
+          hint:"Put off = postpone"},
+  {id:41, sentence:"He invented a story to avoid getting in trouble.",
+          key:"MADE",      before:"He",             after:"to avoid getting in trouble.",
+          gap:"made up a story",
+          hint:"Make up = invent (a story or excuse)"},
+  {id:42, sentence:"Could you look after my cat while I'm away?",
+          key:"CARE",      before:"Could you",      after:"my cat while I'm away?",
+          gap:"take care of",
+          hint:"Look after = take care of"},
+
+  // CLEFT & EMPHASIS
+  {id:43, sentence:"John broke the window, not Mary.",
+          key:"WAS",       before:"It",             after:"the window, not Mary.",
+          gap:"was John who broke",
+          hint:"Cleft sentence: It was + noun + who/that + verb"},
+  {id:44, sentence:"I only realised I was lost when it got dark.",
+          key:"NOT",       before:"It was",         after:"that I realised I was lost.",
+          gap:"not until it got dark",
+          hint:"It was not until... that... (emphasises the time)"},
+  {id:45, sentence:"He rarely speaks in public.",
+          key:"SELDOM",    before:"He",             after:"in public.",
+          gap:"seldom speaks",
+          hint:"Seldom = rarely (formal register)"},
+
+  // CONCESSION & REASON
+  {id:46, sentence:"Despite feeling ill, she went to work.",
+          key:"EVEN",      before:"",               after:"she felt ill, she went to work.",
+          gap:"Even though",
+          hint:"Even though = despite + subject + verb"},
+  {id:47, sentence:"He is responsible for managing the team.",
+          key:"CHARGE",    before:"He is",          after:"the team.",
+          gap:"in charge of managing",
+          hint:"Be in charge of + gerund/noun"},
+  {id:48, sentence:"The film lasted three hours.",
+          key:"LONG",      before:"The film was",   after:".",
+          gap:"three hours long",
+          hint:"Duration: was + period of time + long"},
+  {id:49, sentence:"It's not worth trying to convince him.",
+          key:"POINT",     before:"There's",        after:"to convince him.",
+          gap:"no point in trying",
+          hint:"There's no point in + gerund"},
+  {id:50, sentence:"She is very keen on photography.",
+          key:"INTEREST",  before:"She has",        after:"photography.",
+          gap:"a great interest in",
+          hint:"Have an interest in + noun/gerund"},
+
+  // WORD FORMS
+  {id:51, sentence:"You must remember to lock the door before leaving.",
+          key:"FORGET",    before:"Don't",          after:"before leaving.",
+          gap:"forget to lock the door",
+          hint:"Remember to = don't forget to"},
+  {id:52, sentence:"She can speak three languages fluently.",
+          key:"FLUENT",    before:"She",            after:"three languages.",
+          gap:"is fluent in",
+          hint:"Be fluent in + language"},
+  {id:53, sentence:"The weather was so bad that the match was postponed.",
+          key:"SUCH",      before:"It was",         after:"the match was postponed.",
+          gap:"such bad weather that",
+          hint:"Such + (a/an) + adjective + uncountable noun + that"},
+  {id:54, sentence:"He made an effort to arrive on time.",
+          key:"TRIED",     before:"He",             after:"on time.",
+          gap:"tried hard to arrive",
+          hint:"Make an effort = try hard"},
+  {id:55, sentence:"They decided to cancel the project.",
+          key:"DECISION",  before:"They made a",    after:"the project.",
+          gap:"decision to cancel",
+          hint:"Decided to = made a decision to"},
+
+  // ADVANCED STRUCTURES
+  {id:56, sentence:"I would prefer you to come earlier.",
+          key:"RATHER",    before:"I would",        after:"earlier.",
+          gap:"rather you came",
+          hint:"Would rather + subject + past simple"},
+  {id:57, sentence:"It's time you started taking this seriously.",
+          key:"HIGH",      before:"It's",           after:"taking this seriously.",
+          gap:"high time you started",
+          hint:"It's high time + subject + past simple"},
+  {id:58, sentence:"I had just fallen asleep when the phone rang.",
+          key:"SOONER",    before:"",               after:"had I fallen asleep than the phone rang.",
+          gap:"No sooner",
+          hint:"No sooner had... than (inversion for emphasis)"},
+  {id:59, sentence:"She went to bed early so that she could wake up fresh.",
+          key:"ORDER",     before:"She went to bed early", after:"up fresh.",
+          gap:"in order to wake",
+          hint:"So that + could = in order to + infinitive"},
+  {id:60, sentence:"He started working here five years ago.",
+          key:"FOR",       before:"He has been working here", after:".",
+          gap:"for five years",
+          hint:"Started + time ago → has/have been + for + period of time"},
+
+  // MORE
+  {id:61, sentence:"Walking in the rain is something I love.",
+          key:"FOND",      before:"I",              after:"the rain.",
+          gap:"am fond of walking in",
+          hint:"Be fond of + gerund"},
+  {id:62, sentence:"The manager made everyone stay late.",
+          key:"MADE",      before:"Everyone",       after:"late by the manager.",
+          gap:"was made to stay",
+          hint:"Causative passive: was/were made to + infinitive"},
+  {id:63, sentence:"She spoke so quietly that nobody could hear her.",
+          key:"QUIETLY",   before:"She spoke",      after:"anyone to hear her.",
+          gap:"too quietly for",
+          hint:"Too + adverb + for + object + to infinitive"},
+  {id:64, sentence:"It is expected that the prices will rise.",
+          key:"EXPECTED",  before:"Prices",         after:"rise.",
+          gap:"are expected to",
+          hint:"Impersonal passive: subject + is expected to + infinitive"},
+  {id:65, sentence:"You don't have to attend the meeting.",
+          key:"COMPULSORY",before:"It",             after:"the meeting.",
+          gap:"is not compulsory to attend",
+          hint:"Don't have to = it is not compulsory to"},
+  {id:66, sentence:"The children were not allowed to watch TV after 9 pm.",
+          key:"FORBIDDEN", before:"The children",   after:"TV after 9 pm.",
+          gap:"were forbidden to watch",
+          hint:"Not allowed to = forbidden to"},
+  {id:67, sentence:"My parents made me apologise to the neighbour.",
+          key:"FORCED",    before:"I was",          after:"the neighbour by my parents.",
+          gap:"forced to apologise to",
+          hint:"Be forced to = be made to (passive causative)"},
+  {id:68, sentence:"There are too many people for the room to fit.",
+          key:"ENOUGH",    before:"The room isn't", after:"all the people.",
+          gap:"big enough to fit",
+          hint:"Not + adjective + enough + to infinitive"},
+  {id:69, sentence:"I haven't seen him since Christmas.",
+          key:"LAST",      before:"The",            after:"him was at Christmas.",
+          gap:"last time I saw",
+          hint:"Haven't seen since = the last time... was"},
+  {id:70, sentence:"She is not as good at maths as her brother.",
+          key:"BETTER",    before:"Her brother",    after:"maths than her.",
+          gap:"is better at",
+          hint:"Reverse the comparison: not as good as = less good than"},
+
+  // WISH & REGRET
+  {id:71, sentence:"I regret not taking the job when I had the chance.",
+          key:"WISH",      before:"I",              after:"the job when I had the chance.",
+          gap:"wish I had taken",
+          hint:"Wish + past perfect for regrets about the past"},
+  {id:72, sentence:"It's a pity I didn't meet her sooner.",
+          key:"ONLY",      before:"If",             after:"met her sooner!",
+          gap:"only I had",
+          hint:"If only + past perfect = a strong wish about a past situation"},
+
+  // DESPITE / DUE TO
+  {id:73, sentence:"They went for a walk in spite of the rain.",
+          key:"ALTHOUGH",  before:"",               after:"it was raining, they went for a walk.",
+          gap:"Although",
+          hint:"Although = in spite of + noun/gerund (introduces a full clause)"},
+  {id:74, sentence:"I didn't go to the party because I was ill.",
+          key:"DUE",       before:"I didn't go to the party", after:"my illness.",
+          gap:"due to",
+          hint:"Due to + noun phrase = because of"},
+  {id:75, sentence:"Shall we go to the cinema tonight?",
+          key:"ABOUT",     before:"",               after:"going to the cinema tonight?",
+          gap:"How about",
+          hint:"How about + gerund = informal suggestion"},
+];
+
+/* ── State ── */
+let pool = [];
+let correct = 0, attempted = 0, exCount = 0;
+const doneIds = new Set();
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function norm(s) {
+  return s.trim().toLowerCase().replace(/['']/g,"'").replace(/\s+/g,' ');
+}
+function checkAns(input, gap) {
+  return gap.split(' / ').map(norm).some(v => v === norm(input));
+}
+function wordCount(s) {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+function updateScore() {
+  document.getElementById('sc').textContent = correct;
+  document.getElementById('st').textContent = attempted;
+  if (attempted > 0) {
+    const pct = Math.round(correct / attempted * 100);
+    const el = document.getElementById('sp');
+    el.textContent = pct + '%';
+    el.style.color = pct >= 70 ? '#6fcf97' : '#eb5757';
+  }
+}
+
+/* ── Render ── */
+function renderCard(ex, animIdx) {
+  const n = ++exCount;
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'card-' + ex.id;
+  card.style.animationDelay = (animIdx * 0.05) + 's';
+
+  const beforeHtml = ex.before ? `<span>${ex.before}&nbsp;</span>` : '';
+  const afterHtml  = ex.after  ? `<span>&nbsp;${ex.after}</span>`  : '';
+
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="ex-num">Exercise ${n}</span>
+      <span class="badge" id="badge-${ex.id}"></span>
+    </div>
+
+    <p class="original">${ex.sentence}</p>
+
+    <div class="key-row">
+      <span class="key-lbl">Key word:</span>
+      <span class="key-word">${ex.key}</span>
+    </div>
+
+    <div class="second-sentence">
+      ${beforeHtml}
+      <span class="gap-wrap" id="wrap-${ex.id}">
+        <input class="gap-input" id="input-${ex.id}"
+               type="text" autocomplete="off" autocorrect="off"
+               autocapitalize="off" spellcheck="false"
+               placeholder="2–5 words including ${ex.key.toLowerCase()}…"/>
+      </span>
+      ${afterHtml}
+    </div>
+
+    <div class="word-count" id="wc-${ex.id}">—</div>
+
+    <div class="btns" id="btns-${ex.id}">
+      <button class="btn-check" id="btn-${ex.id}" disabled onclick="doCheck(${ex.id})">Check</button>
+    </div>
+    <div id="fb-${ex.id}"></div>
+  `;
+
+  setTimeout(() => {
+    const inp = document.getElementById('input-' + ex.id);
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      const wc = wordCount(inp.value);
+      const wcEl = document.getElementById('wc-' + ex.id);
+      wcEl.textContent = wc + (wc === 1 ? ' word' : ' words');
+      wcEl.style.color = (wc >= 2 && wc <= 5) ? '#d4af37' : '#888';
+      document.getElementById('btn-' + ex.id).disabled = wc < 1;
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && inp.value.trim()) doCheck(ex.id);
+    });
+  }, 0);
+
+  return card;
+}
+
+/* ── Check ── */
+window.doCheck = function(id) {
+  const ex  = ALL.find(e => e.id === id);
+  const inp = document.getElementById('input-' + id);
+  const val = inp.value.trim();
+  if (!val) return;
+
+  const ok = checkAns(val, ex.gap);
+
+  if (!doneIds.has(id)) {
+    doneIds.add(id);
+    if (ok) correct++;
+    attempted++;
+    updateScore();
+  }
+
+  inp.disabled = true;
+  document.getElementById('wrap-' + id).className = 'gap-wrap ' + (ok ? 'correct-inp' : 'wrong-inp');
+  document.getElementById('card-' + id).className = 'card ' + (ok ? 'correct' : 'wrong');
+  const badge = document.getElementById('badge-' + id);
+  badge.textContent = ok ? '✓ CORRECT' : '✗ INCORRECT';
+  badge.className = 'badge ' + (ok ? 'ok' : 'bad');
+
+  const btns = document.getElementById('btns-' + id);
+  btns.innerHTML = '';
+  if (!ok) {
+    const bs = document.createElement('button');
+    bs.className = 'btn-show'; bs.textContent = 'Show Answer';
+    bs.onclick = () => showAnswer(id);
+    btns.appendChild(bs);
+  }
+  const br = document.createElement('button');
+  br.className = 'btn-retry'; br.textContent = 'Try Again';
+  br.onclick = () => retry(id);
+  btns.appendChild(br);
+
+  document.getElementById('fb-' + id).innerHTML =
+    `<div class="hint-box">💡 ${ex.hint}</div>`;
+};
+
+/* ── Show answer ── */
+window.showAnswer = function(id) {
+  const ex = ALL.find(e => e.id === id);
+  const before = ex.before ? ex.before + ' ' : '';
+  const after  = ex.after  ? ' ' + ex.after  : '';
+  const full = before + '<strong style="color:#d4af37">' + ex.gap + '</strong>' + after;
+  document.getElementById('fb-' + id).innerHTML = `
+    <div class="answer-box">
+      <div class="albl">Correct Answer</div>
+      <div class="aval">${full}</div>
+    </div>
+    <div class="hint-box">💡 ${ex.hint}</div>`;
+  const btn = document.getElementById('btns-' + id).querySelector('.btn-show');
+  if (btn) btn.remove();
+};
+
+/* ── Retry ── */
+window.retry = function(id) {
+  const inp  = document.getElementById('input-' + id);
+  inp.value = ''; inp.disabled = false;
+  document.getElementById('wrap-' + id).className = 'gap-wrap';
+  document.getElementById('card-' + id).className = 'card';
+  document.getElementById('badge-' + id).textContent = '';
+  document.getElementById('wc-' + id).textContent = '—';
+  document.getElementById('fb-' + id).innerHTML = '';
+  document.getElementById('btns-' + id).innerHTML =
+    `<button class="btn-check" disabled onclick="doCheck(${id})">Check</button>`;
+  inp.addEventListener('input', () => {
+    const wc = wordCount(inp.value);
+    document.getElementById('wc-' + id).textContent = wc + (wc===1?' word':' words');
+    document.getElementById('wc-' + id).style.color = (wc>=2&&wc<=5)?'#d4af37':'#888';
+    document.getElementById('btn-' + id) && (document.getElementById('btn-' + id).disabled = wc < 1);
+  });
+  inp.addEventListener('keydown', e => { if(e.key==='Enter'&&inp.value.trim()) doCheck(id); });
+  inp.focus();
+};
+
+/* ── Infinite scroll ── */
+function loadBatch() {
+  if (pool.length === 0) pool = shuffle(ALL);
+  const batch = pool.splice(0, 10);
+  const container = document.getElementById('cards');
+  batch.forEach((ex, i) => container.appendChild(renderCard(ex, i)));
+}
+
+pool = shuffle(ALL);
+loadBatch();
+
+const obs = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) loadBatch();
+}, { threshold: 0.1 });
+obs.observe(document.getElementById('loader'));
+</script>
+</body>
+</html>
